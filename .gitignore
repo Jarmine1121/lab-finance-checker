@@ -1,0 +1,4 @@
+node_modules/
+lab-finance-data.json
+cloudflared.exe
+*.log
