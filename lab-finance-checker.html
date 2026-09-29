@@ -1,0 +1,2366 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>实验室财务核查系统</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --primary: #0d9488;
+  --primary-dark: #0f766e;
+  --primary-light: #14b8a6;
+  --primary-bg: #f0fdfa;
+  --danger: #ef4444;
+  --danger-bg: #fef2f2;
+  --danger-dark: #dc2626;
+  --warning: #f59e0b;
+  --warning-bg: #fffbeb;
+  --success: #22c55e;
+  --success-bg: #f0fdf4;
+  --info: #3b82f6;
+  --info-bg: #eff6ff;
+  --gray-50: #f9fafb;
+  --gray-100: #f3f4f6;
+  --gray-200: #e5e7eb;
+  --gray-300: #d1d5db;
+  --gray-400: #9ca3af;
+  --gray-500: #6b7280;
+  --gray-600: #4b5563;
+  --gray-700: #374151;
+  --gray-800: #1f2937;
+  --gray-900: #111827;
+  --sidebar-width: 240px;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.05);
+  --shadow: 0 1px 3px rgba(0,0,0,.1),0 1px 2px rgba(0,0,0,.06);
+  --shadow-md: 0 4px 6px rgba(0,0,0,.08),0 2px 4px rgba(0,0,0,.06);
+  --shadow-lg: 0 10px 15px rgba(0,0,0,.1),0 4px 6px rgba(0,0,0,.05);
+  --radius: 10px;
+  --radius-sm: 6px;
+  --radius-lg: 16px;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+  background: var(--gray-100);
+  color: var(--gray-800);
+  font-size: 14px;
+  line-height: 1.6;
+}
+/* Login */
+.login-wrap {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #0d9488 0%, #0f766e 50%, #115e59 100%);
+  padding: 20px;
+}
+.login-card {
+  background: #fff;
+  border-radius: var(--radius-lg);
+  padding: 48px 40px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: var(--shadow-lg);
+}
+.login-card h1 {
+  text-align: center;
+  color: var(--primary-dark);
+  font-size: 22px;
+  margin-bottom: 6px;
+}
+.login-card .subtitle {
+  text-align: center;
+  color: var(--gray-500);
+  font-size: 13px;
+  margin-bottom: 32px;
+}
+.login-card .demo-hint {
+  background: var(--primary-bg);
+  border: 1px solid #99f6e4;
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  font-size: 12px;
+  color: var(--gray-600);
+  margin-bottom: 24px;
+}
+.login-card .demo-hint strong { color: var(--primary-dark); }
+.login-card .demo-hint p { margin: 2px 0; }
+
+/* App Layout */
+.app { display: flex; min-height: 100vh; }
+.sidebar {
+  width: var(--sidebar-width);
+  background: var(--gray-900);
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  z-index: 100;
+  overflow-y: auto;
+  transition: transform .3s;
+}
+.sidebar-brand {
+  padding: 20px 18px;
+  color: #fff;
+  font-weight: 700;
+  font-size: 16px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.sidebar-brand .logo {
+  width: 36px; height: 36px;
+  background: var(--primary);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+}
+.sidebar-brand .brand-text { display: flex; flex-direction: column; }
+.sidebar-brand .brand-text small { font-weight: 400; font-size: 11px; color: var(--gray-400); }
+.nav-section { padding: 10px 0; }
+.nav-section-title {
+  color: var(--gray-500);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  padding: 8px 18px;
+  font-weight: 600;
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 18px;
+  color: var(--gray-300);
+  cursor: pointer;
+  font-size: 13px;
+  border-left: 3px solid transparent;
+  transition: all .15s;
+  white-space: nowrap;
+}
+.nav-item:hover { background: rgba(255,255,255,.06); color: #fff; }
+.nav-item.active {
+  background: rgba(13,148,136,.15);
+  color: #fff;
+  border-left-color: var(--primary);
+}
+.nav-item .icon { width: 20px; text-align: center; }
+.nav-badge {
+  margin-left: auto;
+  background: var(--danger);
+  color: #fff;
+  font-size: 10px;
+  padding: 1px 7px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.main {
+  flex: 1;
+  margin-left: var(--sidebar-width);
+  display: flex;
+  flex-direction: column;
+}
+.topbar {
+  background: #fff;
+  height: 56px;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--gray-200);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+.topbar-title { font-size: 17px; font-weight: 600; color: var(--gray-800); }
+.topbar-right { display: flex; align-items: center; gap: 16px; }
+.topbar-user {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--gray-600);
+}
+.topbar-user .avatar {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 600;
+  font-size: 13px;
+}
+.role-tag {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+.role-tag.admin { background: #ddd6fe; color: #6d28d9; }
+.role-tag.recorder { background: var(--info-bg); color: #1d4ed8; }
+.role-tag.verifier { background: var(--warning-bg); color: #b45309; }
+.content { padding: 24px; flex: 1; }
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all .15s;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-primary:hover { background: var(--primary-dark); }
+.btn-secondary { background: #fff; color: var(--gray-700); border: 1px solid var(--gray-300); }
+.btn-secondary:hover { background: var(--gray-50); }
+.btn-danger { background: var(--danger); color: #fff; }
+.btn-danger:hover { background: var(--danger-dark); }
+.btn-ghost { background: transparent; color: var(--gray-600); }
+.btn-ghost:hover { background: var(--gray-100); }
+.btn-sm { padding: 5px 12px; font-size: 12px; }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+
+/* Cards & Grid */
+.card {
+  background: #fff;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.card-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--gray-200);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.card-header h3 { font-size: 15px; font-weight: 600; }
+.card-body { padding: 20px; }
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.stat-card {
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: var(--shadow);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+.stat-card .stat-info { flex: 1; }
+.stat-card .stat-label { font-size: 12px; color: var(--gray-500); margin-bottom: 6px; }
+.stat-card .stat-value { font-size: 28px; font-weight: 700; color: var(--gray-800); }
+.stat-card .stat-sub { font-size: 11px; margin-top: 4px; }
+.stat-card .stat-icon {
+  width: 44px; height: 44px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+.stat-icon.green { background: var(--success-bg); color: var(--success); }
+.stat-icon.blue { background: var(--info-bg); color: var(--info); }
+.stat-icon.amber { background: var(--warning-bg); color: var(--warning); }
+.stat-icon.red { background: var(--danger-bg); color: var(--danger); }
+.stat-icon.teal { background: var(--primary-bg); color: var(--primary); }
+
+.dashboard-row {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+.chart-container { position: relative; height: 280px; }
+.chart-container-sm { position: relative; height: 240px; }
+
+/* Table */
+.table-wrap { overflow-x: auto; }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+thead th {
+  text-align: left;
+  padding: 10px 14px;
+  background: var(--gray-50);
+  color: var(--gray-500);
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  border-bottom: 1px solid var(--gray-200);
+  white-space: nowrap;
+}
+tbody td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--gray-100);
+}
+tbody tr:hover { background: var(--gray-50); }
+tbody tr:last-child td { border-bottom: none; }
+
+/* Badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.badge-pending { background: var(--warning-bg); color: #b45309; }
+.badge-verified { background: var(--success-bg); color: #15803d; }
+.badge-discrepancy { background: var(--danger-bg); color: #b91c1c; }
+.badge-match { background: var(--success-bg); color: #15803d; }
+.badge-diff { background: var(--danger-bg); color: #b91c1c; }
+
+/* Forms */
+.form-group { margin-bottom: 16px; }
+.form-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--gray-700);
+  margin-bottom: 6px;
+}
+.form-label .req { color: var(--danger); }
+.form-input, .form-select, .form-textarea {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-family: inherit;
+  background: #fff;
+  transition: border-color .15s, box-shadow .15s;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  outline: none;
+  border-color: var(--primary-light);
+  box-shadow: 0 0 0 3px rgba(13,148,136,.1);
+}
+.form-textarea { resize: vertical; min-height: 72px; }
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.form-row-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+}
+.form-hint { font-size: 11px; color: var(--gray-400); margin-top: 4px; }
+.form-error { font-size: 11px; color: var(--danger); margin-top: 4px; }
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,.4);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.modal {
+  background: #fff;
+  border-radius: var(--radius-lg);
+  width: 100%;
+  max-width: 560px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-lg);
+}
+.modal.modal-lg { max-width: 800px; }
+.modal-header {
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--gray-200);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.modal-header h3 { font-size: 17px; font-weight: 600; }
+.modal-close { cursor: pointer; font-size: 22px; color: var(--gray-400); background: none; border: none; line-height: 1; padding: 0 4px; }
+.modal-body { padding: 24px; }
+.modal-footer {
+  padding: 16px 24px;
+  border-top: 1px solid var(--gray-200);
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* Filters */
+.filters {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.filter-item { min-width: 140px; }
+.filter-item .form-input, .filter-item .form-select { height: 36px; padding: 7px 10px; font-size: 12px; }
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 48px 20px;
+  color: var(--gray-400);
+}
+.empty-state .empty-icon { font-size: 48px; margin-bottom: 12px; }
+.empty-state h4 { font-size: 15px; color: var(--gray-500); margin-bottom: 4px; }
+
+/* Toast */
+.toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 300;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.toast {
+  background: #fff;
+  border-radius: var(--radius-sm);
+  padding: 12px 18px;
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  min-width: 260px;
+  animation: slideIn .3s ease;
+}
+@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+.toast.success { border-left: 4px solid var(--success); }
+.toast.error { border-left: 4px solid var(--danger); }
+.toast.info { border-left: 4px solid var(--info); }
+
+/* Pagination */
+.pagination { display: flex; gap: 4px; justify-content: center; padding: 16px; }
+.pagination button {
+  padding: 6px 12px;
+  border: 1px solid var(--gray-300);
+  background: #fff;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 12px;
+}
+.pagination button.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+.pagination button:disabled { opacity: .4; cursor: not-allowed; }
+
+/* Summary Row */
+.summary-row {
+  display: flex;
+  gap: 24px;
+  padding: 14px 20px;
+  background: var(--primary-bg);
+  border-radius: var(--radius-sm);
+  margin-bottom: 16px;
+  font-size: 13px;
+}
+.summary-row .summary-item { display: flex; flex-direction: column; }
+.summary-row .summary-label { color: var(--gray-500); font-size: 11px; }
+.summary-row .summary-val { font-weight: 700; color: var(--primary-dark); font-size: 16px; }
+
+/* Verify box */
+.verify-box {
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.verify-compare {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+  text-align: center;
+  margin: 16px 0;
+}
+.verify-compare .vc-item {
+  padding: 16px;
+  border-radius: var(--radius-sm);
+  background: var(--gray-50);
+}
+.verify-compare .vc-item .vc-label { font-size: 11px; color: var(--gray-500); margin-bottom: 6px; }
+.verify-compare .vc-item .vc-value { font-size: 22px; font-weight: 700; }
+.verify-compare .vc-item.original .vc-value { color: var(--gray-700); }
+.verify-compare .vc-item.actual .vc-value { color: var(--info); }
+.verify-compare .vc-item.diff .vc-value { color: var(--danger); }
+.verify-compare .vc-item.diff.match .vc-value { color: var(--success); }
+
+.amount-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+.amount-input-wrap .currency {
+  padding: 9px 10px;
+  background: var(--gray-100);
+  border: 1px solid var(--gray-300);
+  border-right: none;
+  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+  font-size: 13px;
+  color: var(--gray-500);
+}
+.amount-input-wrap .form-input { border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
+
+/* Tabs */
+.tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 2px solid var(--gray-200);
+  margin-bottom: 20px;
+}
+.tab {
+  padding: 10px 20px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--gray-500);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: all .15s;
+}
+.tab:hover { color: var(--gray-700); }
+.tab.active { color: var(--primary-dark); border-bottom-color: var(--primary); }
+.tab .tab-badge {
+  background: var(--danger);
+  color: #fff;
+  font-size: 10px;
+  padding: 1px 7px;
+  border-radius: 10px;
+  margin-left: 6px;
+}
+
+/* Sidebar overlay for mobile */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 99;
+}
+.sidebar-overlay.show { display: block; }
+@media (min-width: 901px) { .sidebar-overlay { display: none !important; } }
+
+/* Loading overlay */
+.loading-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(255,255,255,0.8);
+  z-index: 999;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+.loading-overlay.show { display: flex; }
+.loading-spinner {
+  width: 40px; height: 40px;
+  border: 4px solid var(--gray-200);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Mobile bottom nav */
+.mobile-nav {
+  display: none;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: #fff;
+  border-top: 1px solid var(--gray-200);
+  padding: 4px 0 env(safe-area-inset-bottom, 4px);
+  z-index: 90;
+  justify-content: space-around;
+  box-shadow: 0 -2px 8px rgba(0,0,0,.05);
+}
+.mobile-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: 10px;
+  color: var(--gray-500);
+  cursor: pointer;
+  padding: 4px 10px;
+  border: none;
+  background: none;
+}
+.mobile-nav-item.active { color: var(--primary); }
+.mobile-nav-item .m-icon { font-size: 20px; }
+
+/* Responsive */
+@media (max-width: 900px) {
+  .sidebar { transform: translateX(-100%); }
+  .sidebar.open { transform: translateX(0); }
+  .main { margin-left: 0; padding-bottom: 56px; }
+  .dashboard-row { grid-template-columns: 1fr; }
+  .form-row, .form-row-3 { grid-template-columns: 1fr; }
+  .verify-compare { grid-template-columns: 1fr; }
+  .topbar .menu-toggle { display: block; }
+  .mobile-nav { display: flex; }
+  .content { padding: 12px; }
+  .topbar { padding: 0 12px; height: 50px; }
+  .topbar-title { font-size: 15px; }
+  .stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .stat-card { padding: 14px; }
+  .stat-card .stat-value { font-size: 20px; }
+  .stat-card .stat-icon { width: 36px; height: 36px; font-size: 18px; }
+  .filters { gap: 6px; }
+  .filter-item { min-width: 100%; }
+  .btn { padding: 10px 16px; }
+  .btn-sm { padding: 8px 12px; }
+  .modal { max-width: 100%; border-radius: 12px 12px 0 0; max-height: 100vh; }
+  .modal-body { padding: 16px; }
+  .login-card { padding: 32px 24px; }
+  .topbar-user .role-tag { display: none; }
+  thead th, tbody td { padding: 8px 10px; font-size: 12px; }
+  .verify-compare .vc-item { padding: 12px; }
+  .verify-compare .vc-item .vc-value { font-size: 18px; }
+}
+.menu-toggle { display: none; background: none; border: none; font-size: 22px; cursor: pointer; color: var(--gray-600); }
+</style>
+</head>
+<body>
+
+<!-- Login Page -->
+<div id="loginPage" class="login-wrap" style="display: none;">
+  <div class="login-card">
+    <h1>实验室财务核查系统</h1>
+    <p class="subtitle">Laboratory Finance Verification System</p>
+    <div class="demo-hint">
+      <strong>演示账号：</strong>
+      <p>管理员：admin / admin123</p>
+      <p>录入员：recorder / 123456</p>
+      <p>核查员：verifier / 123456</p>
+    </div>
+    <div class="form-group">
+      <label class="form-label">用户名</label>
+      <input type="text" id="loginUser" class="form-input" placeholder="请输入用户名" value="admin">
+    </div>
+    <div class="form-group">
+      <label class="form-label">密码</label>
+      <input type="password" id="loginPass" class="form-input" placeholder="请输入密码" value="admin123">
+    </div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center;padding:10px;" onclick="doLogin()">登 录</button>
+  </div>
+</div>
+
+<!-- Main App -->
+<div id="appPage" class="app" style="display: none;">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="logo">L</div>
+      <div class="brand-text">
+        实验室财务核查
+        <small>v1.0 Lab Finance Checker</small>
+      </div>
+    </div>
+    <nav class="nav-section" id="navMenu"><div class="nav-section-title">主菜单</div><div class="nav-item active" onclick="navigate('dashboard')">
+        <span class="icon">📊</span> 仪表盘 
+      </div><div class="nav-item " onclick="navigate('records')">
+        <span class="icon">📋</span> 采购记录 
+      </div><div class="nav-item " onclick="navigate('verify')">
+        <span class="icon">✅</span> 核查中心 <span class="nav-badge">3</span>
+      </div><div class="nav-item " onclick="navigate('suppliers')">
+        <span class="icon">🏢</span> 销售商管理 
+      </div><div class="nav-item " onclick="navigate('reports')">
+        <span class="icon">📈</span> 统计报表 
+      </div><div class="nav-item " onclick="navigate('users')">
+        <span class="icon">👥</span> 用户管理 
+      </div><div class="nav-item " onclick="navigate('settings')">
+        <span class="icon">⚙️</span> 数据管理 
+      </div></nav>
+  </aside>
+  <div class="main">
+    <header class="topbar">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+        <span class="topbar-title" id="pageTitle">仪表盘</span>
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-user">
+          <div class="avatar" id="topbarAvatar">系</div>
+          <div style="display:flex;flex-direction:column;">
+            <span id="topbarUserName">系统管理员</span>
+            <span class="role-tag admin" id="topbarRole">管理员</span>
+          </div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="logout()">退出</button>
+      </div>
+    </header>
+    <main class="content" id="mainContent">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-info">
+          <div class="stat-label">采购总金额</div>
+          <div class="stat-value">¥35,350.00</div>
+          <div class="stat-sub" style="color:var(--gray-400)">16 条记录</div>
+        </div>
+        <div class="stat-icon teal">💰</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-info">
+          <div class="stat-label">待核查</div>
+          <div class="stat-value">3</div>
+          <div class="stat-sub" style="color:var(--warning)">待处理</div>
+        </div>
+        <div class="stat-icon amber">⏳</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-info">
+          <div class="stat-label">已核查</div>
+          <div class="stat-value">11</div>
+          <div class="stat-sub" style="color:var(--success)">金额一致</div>
+        </div>
+        <div class="stat-icon green">✓</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-info">
+          <div class="stat-label">金额差异</div>
+          <div class="stat-value">¥142.00</div>
+          <div class="stat-sub" style="color:var(--danger)">2 条有差异</div>
+        </div>
+        <div class="stat-icon red">⚠️</div>
+      </div>
+    </div>
+
+    <div class="dashboard-row">
+      <div class="card">
+        <div class="card-header"><h3>近6个月采购趋势</h3></div>
+        <div class="card-body">
+          <div class="chart-container"><canvas id="trendChart" width="644" height="350" style="display: block; box-sizing: border-box; height: 280px; width: 515px;"></canvas></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h3>供应商金额分布</h3></div>
+        <div class="card-body">
+          <div class="chart-container"><canvas id="supChart" width="384" height="350" style="display: block; box-sizing: border-box; height: 280px; width: 307px;"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h3>最近采购记录</h3>
+        <button class="btn btn-ghost btn-sm" onclick="navigate('records')">查看全部 →</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>日期</th><th>销售商</th><th>品名</th><th>金额</th><th>状态</th>
+          </tr></thead>
+          <tbody>
+            
+              <tr>
+                <td>2026-09-26</td>
+                <td>生工生物工程有限公司</td>
+                <td>胎牛血清</td>
+                <td><strong>¥1,239.00</strong></td>
+                <td><span class="badge badge-verified">已核查</span></td>
+              </tr>
+            
+              <tr>
+                <td>2026-09-25</td>
+                <td>生工生物工程有限公司</td>
+                <td>微量移液器吸头</td>
+                <td><strong>¥5,180.00</strong></td>
+                <td><span class="badge badge-verified">已核查</span></td>
+              </tr>
+            
+              <tr>
+                <td>2026-09-18</td>
+                <td>国药集团化学试剂</td>
+                <td>DMSO</td>
+                <td><strong>¥444.00</strong></td>
+                <td><span class="badge badge-verified">已核查</span></td>
+              </tr>
+            
+              <tr>
+                <td>2026-09-17</td>
+                <td>赛默飞世尔科技</td>
+                <td>PCR Master Mix</td>
+                <td><strong>¥3,528.00</strong></td>
+                <td><span class="badge badge-discrepancy">有差异</span></td>
+              </tr>
+            
+              <tr>
+                <td>2026-09-16</td>
+                <td>国药集团化学试剂</td>
+                <td>离心管 1.5mL</td>
+                <td><strong>¥441.00</strong></td>
+                <td><span class="badge badge-pending">待核查</span></td>
+              </tr>
+            
+              <tr>
+                <td>2026-09-15</td>
+                <td>赛默飞世尔科技</td>
+                <td>胎牛血清</td>
+                <td><strong>¥3,141.00</strong></td>
+                <td><span class="badge badge-verified">已核查</span></td>
+              </tr>
+            
+              <tr>
+                <td>2026-09-08</td>
+                <td>国药集团化学试剂</td>
+                <td>微量移液器吸头</td>
+                <td><strong>¥5,117.00</strong></td>
+                <td><span class="badge badge-verified">已核查</span></td>
+              </tr>
+            
+              <tr>
+                <td>2026-09-02</td>
+                <td>生工生物工程有限公司</td>
+                <td>DMSO</td>
+                <td><strong>¥864.00</strong></td>
+                <td><span class="badge badge-pending">待核查</span></td>
+              </tr>
+            
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+<div id="modalContainer"></div>
+<div class="loading-overlay" id="loadingOverlay"><div class="loading-spinner"></div></div>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+<nav class="mobile-nav" id="mobileNav"></nav>
+
+<script>
+// ==================== Data Layer (Server + Local Hybrid) ====================
+const DB = {
+  _users: [],
+  _suppliers: [],
+  _records: [],
+  _server: false,
+
+  async init() {
+    try {
+      const res = await fetch('/api/init');
+      if (res.ok) {
+        const data = await res.json();
+        this._users = data.users || [];
+        this._suppliers = data.suppliers || [];
+        this._records = data.records || [];
+        this._server = true;
+        return;
+      }
+    } catch(e) {}
+    // Fallback to localStorage
+    if (!localStorage.getItem('lfc_users')) {
+      this._users = [
+        { id: 'u1', name: '系统管理员', username: 'admin', password: 'admin123', role: 'admin' },
+        { id: 'u2', name: '张录入', username: 'recorder', password: '123456', role: 'recorder' },
+        { id: 'u3', name: '李核查', username: 'verifier', password: '123456', role: 'verifier' },
+      ];
+      localStorage.setItem('lfc_users', JSON.stringify(this._users));
+    } else {
+      this._users = JSON.parse(localStorage.getItem('lfc_users') || '[]');
+    }
+    if (!localStorage.getItem('lfc_suppliers')) {
+      this._suppliers = [
+        { id: 's1', name: '生工生物工程有限公司', contact: '王经理', phone: '13800001111', address: '上海市松江区', bankAccount: '6222 0000 1111 2222', notes: '常规试剂供应商' },
+        { id: 's2', name: '赛默飞世尔科技', contact: '刘经理', phone: '13900002222', address: '北京市朝阳区', bankAccount: '6222 0000 3333 4444', notes: '仪器设备供应商' },
+        { id: 's3', name: '国药集团化学试剂', contact: '陈经理', phone: '13700003333', address: '上海市黄浦区', bankAccount: '6222 0000 5555 6666', notes: '化学试剂供应商' },
+      ];
+      localStorage.setItem('lfc_suppliers', JSON.stringify(this._suppliers));
+    } else {
+      this._suppliers = JSON.parse(localStorage.getItem('lfc_suppliers') || '[]');
+    }
+    if (!localStorage.getItem('lfc_records')) {
+      this._records = [];
+      localStorage.setItem('lfc_records', JSON.stringify(this._records));
+    } else {
+      this._records = JSON.parse(localStorage.getItem('lfc_records') || '[]');
+    }
+  },
+
+  getUsers() { return this._users; },
+  getSuppliers() { return this._suppliers; },
+  getRecords() { return this._records; },
+
+  async _api(method, url, body) {
+    const res = await fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || '请求失败');
+    }
+    return res.json();
+  },
+
+  async saveRecordData(data, id) {
+    if (this._server) {
+      if (id) {
+        const saved = await this._api('PUT', `/api/records/${id}`, data);
+        const idx = this._records.findIndex(r => r.id === id);
+        if (idx > -1) this._records[idx] = saved;
+      } else {
+        const saved = await this._api('POST', '/api/records', data);
+        this._records.push(saved);
+      }
+    } else {
+      if (id) {
+        const idx = this._records.findIndex(r => r.id === id);
+        if (idx > -1) this._records[idx] = { ...this._records[idx], ...data };
+      } else {
+        this._records.push(data);
+      }
+      localStorage.setItem('lfc_records', JSON.stringify(this._records));
+    }
+  },
+
+  async verifyRecordData(id, data) {
+    if (this._server) {
+      const saved = await this._api('PUT', `/api/records/${id}/verify`, data);
+      const idx = this._records.findIndex(r => r.id === id);
+      if (idx > -1) this._records[idx] = saved;
+    } else {
+      const idx = this._records.findIndex(r => r.id === id);
+      if (idx > -1) {
+        this._records[idx] = { ...this._records[idx], ...data };
+        localStorage.setItem('lfc_records', JSON.stringify(this._records));
+      }
+    }
+  },
+
+  async saveSupplierData(data, id) {
+    if (this._server) {
+      if (id) {
+        const saved = await this._api('PUT', `/api/suppliers/${id}`, data);
+        const idx = this._suppliers.findIndex(s => s.id === id);
+        if (idx > -1) this._suppliers[idx] = saved;
+      } else {
+        const saved = await this._api('POST', '/api/suppliers', data);
+        this._suppliers.push(saved);
+      }
+    } else {
+      if (id) {
+        const idx = this._suppliers.findIndex(s => s.id === id);
+        if (idx > -1) this._suppliers[idx] = { ...this._suppliers[idx], ...data };
+      } else {
+        data.id = this.genId('s');
+        this._suppliers.push(data);
+      }
+      localStorage.setItem('lfc_suppliers', JSON.stringify(this._suppliers));
+    }
+  },
+
+  async deleteSupplierData(id) {
+    if (this._server) await this._api('DELETE', `/api/suppliers/${id}`);
+    this._suppliers = this._suppliers.filter(s => s.id !== id);
+    if (!this._server) localStorage.setItem('lfc_suppliers', JSON.stringify(this._suppliers));
+  },
+
+  async saveUserData(data, id) {
+    if (this._server) {
+      if (id) {
+        const saved = await this._api('PUT', `/api/users/${id}`, data);
+        const idx = this._users.findIndex(u => u.id === id);
+        if (idx > -1) this._users[idx] = saved;
+      } else {
+        const saved = await this._api('POST', '/api/users', data);
+        this._users.push(saved);
+      }
+    } else {
+      if (id) {
+        const idx = this._users.findIndex(u => u.id === id);
+        if (idx > -1) this._users[idx] = { ...this._users[idx], ...data };
+      } else {
+        data.id = this.genId('u');
+        this._users.push(data);
+      }
+      localStorage.setItem('lfc_users', JSON.stringify(this._users));
+    }
+  },
+
+  async deleteUserData(id) {
+    if (this._server) await this._api('DELETE', `/api/users/${id}`);
+    this._users = this._users.filter(u => u.id !== id);
+    if (!this._server) localStorage.setItem('lfc_users', JSON.stringify(this._users));
+  },
+
+  async exportAll() {
+    if (this._server) return await this._api('GET', '/api/export');
+    return { users: this._users, suppliers: this._suppliers, records: this._records, exportDate: new Date().toISOString() };
+  },
+
+  async importAll(data) {
+    if (this._server) {
+      await this._api('POST', '/api/import', data);
+    }
+    this._users = data.users || this._users;
+    this._suppliers = data.suppliers || [];
+    this._records = data.records || [];
+    if (!this._server) {
+      localStorage.setItem('lfc_users', JSON.stringify(this._users));
+      localStorage.setItem('lfc_suppliers', JSON.stringify(this._suppliers));
+      localStorage.setItem('lfc_records', JSON.stringify(this._records));
+    }
+  },
+
+  async clearAll() {
+    if (this._server) await this._api('POST', '/api/clear');
+    this._records = [];
+    this._suppliers = [];
+    this._users = [
+      { id: 'u1', name: '系统管理员', username: 'admin', password: 'admin123', role: 'admin' },
+      { id: 'u2', name: '张录入', username: 'recorder', password: '123456', role: 'recorder' },
+      { id: 'u3', name: '李核查', username: 'verifier', password: '123456', role: 'verifier' },
+    ];
+    if (!this._server) {
+      localStorage.setItem('lfc_users', JSON.stringify(this._users));
+      localStorage.setItem('lfc_suppliers', JSON.stringify(this._suppliers));
+      localStorage.setItem('lfc_records', JSON.stringify(this._records));
+    }
+  },
+
+  genId(prefix) { return prefix + Date.now().toString(36) + Math.random().toString(36).slice(2,5); },
+};
+
+// ==================== State ====================
+let currentUser = null;
+let currentPage = 'dashboard';
+let pageFilters = { records: {}, verify: {}, suppliers: {} };
+let editingId = null;
+
+// ==================== Auth ====================
+async function doLogin() {
+  const u = document.getElementById('loginUser').value.trim();
+  const p = document.getElementById('loginPass').value.trim();
+  if (!u || !p) return toast('请输入用户名和密码', 'error');
+  showLoading();
+  try {
+    if (DB._server) {
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: u, password: p }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        hideLoading();
+        return toast(err.error || '登录失败', 'error');
+      }
+      currentUser = await res.json();
+    } else {
+      const user = DB.getUsers().find(x => x.username === u && x.password === p);
+      if (!user) { hideLoading(); return toast('用户名或密码错误', 'error'); }
+      currentUser = user;
+    }
+    sessionStorage.setItem('lfc_user', JSON.stringify(currentUser));
+    showApp();
+    toast('登录成功，欢迎回来！', 'success');
+  } catch(e) {
+    toast('网络错误，请检查服务器是否运行', 'error');
+  }
+  hideLoading();
+}
+
+async function logout() {
+  if (DB._server) {
+    try { await fetch('/api/logout', { method: 'POST' }); } catch(e) {}
+  }
+  currentUser = null;
+  sessionStorage.removeItem('lfc_user');
+  document.getElementById('loginPage').style.display = 'flex';
+  document.getElementById('appPage').style.display = 'none';
+}
+
+function showApp() {
+  document.getElementById('loginPage').style.display = 'none';
+  document.getElementById('appPage').style.display = 'flex';
+  document.getElementById('topbarUserName').textContent = currentUser.name;
+  const roleMap = { admin: '管理员', recorder: '录入员', verifier: '核查员' };
+  const roleTag = document.getElementById('topbarRole');
+  roleTag.textContent = roleMap[currentUser.role];
+  roleTag.className = 'role-tag ' + currentUser.role;
+  document.getElementById('topbarAvatar').textContent = currentUser.name[0];
+  renderNav();
+  navigate('dashboard');
+}
+
+// ==================== Navigation ====================
+const menuItems = [
+  { key: 'dashboard', label: '仪表盘', icon: '📊', roles: ['admin','recorder','verifier'] },
+  { key: 'records', label: '采购记录', icon: '📋', roles: ['admin','recorder','verifier'] },
+  { key: 'verify', label: '核查中心', icon: '✅', roles: ['admin','recorder','verifier'] },
+  { key: 'suppliers', label: '销售商管理', icon: '🏢', roles: ['admin','recorder'] },
+  { key: 'reports', label: '统计报表', icon: '📈', roles: ['admin','recorder','verifier'] },
+  { key: 'users', label: '用户管理', icon: '👥', roles: ['admin'] },
+  { key: 'settings', label: '数据管理', icon: '⚙️', roles: ['admin'] },
+];
+
+function renderNav() {
+  const pendingCount = DB.getRecords().filter(r => r.status === 'pending').length;
+  const html = menuItems
+    .filter(m => m.roles.includes(currentUser.role))
+    .map(m => {
+      let badge = '';
+      if (m.key === 'verify' && pendingCount > 0) badge = `<span class="nav-badge">${pendingCount}</span>`;
+      return `<div class="nav-item ${currentPage===m.key?'active':''}" onclick="navigate('${m.key}')">
+        <span class="icon">${m.icon}</span> ${m.label} ${badge}
+      </div>`;
+    }).join('');
+  const sectionHtml = `<div class="nav-section-title">主菜单</div>` + html;
+  document.getElementById('navMenu').innerHTML = sectionHtml;
+}
+
+function navigate(key) {
+  currentPage = key;
+  renderNav();
+  renderMobileNav();
+  const titles = { dashboard:'仪表盘', records:'采购记录', verify:'核查中心', suppliers:'销售商管理', reports:'统计报表', users:'用户管理', settings:'数据管理' };
+  document.getElementById('pageTitle').textContent = titles[key];
+  const renders = { dashboard: renderDashboard, records: renderRecords, verify: renderVerify, suppliers: renderSuppliers, reports: renderReports, users: renderUsers, settings: renderSettings };
+  (renders[key] || renderDashboard)();
+  if (window.innerWidth <= 900) document.getElementById('sidebar').classList.remove('open');
+  closeSidebar();
+}
+
+function renderMobileNav() {
+  const items = menuItems.filter(m => m.roles.includes(currentUser.role));
+  const pendingCount = DB.getRecords().filter(r => r.status === 'pending').length;
+  document.getElementById('mobileNav').innerHTML = items.slice(0, 5).map(m => `
+    <button class="mobile-nav-item ${currentPage===m.key?'active':''}" onclick="navigate('${m.key}')">
+      <span class="m-icon">${m.icon}</span>
+      <span>${m.label}</span>
+      ${m.key === 'verify' && pendingCount > 0 ? `<span style="background:var(--danger);color:#fff;font-size:9px;padding:0 5px;border-radius:8px;position:absolute;margin-left:-8px;margin-top:-20px;">${pendingCount}</span>` : ''}
+    </button>
+  `).join('');
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('show');
+}
+
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('show');
+}
+
+// ==================== Loading & Toast ====================
+function showLoading() { document.getElementById('loadingOverlay').classList.add('show'); }
+function hideLoading() { document.getElementById('loadingOverlay').classList.remove('show'); }
+
+// ==================== Toast ====================
+function toast(msg, type='info') {
+  const c = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  const icons = { success: '✓', error: '✕', info: 'ℹ' };
+  t.innerHTML = `<span>${icons[type]}</span> <span>${msg}</span>`;
+  c.appendChild(t);
+  setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateX(100%)'; t.style.transition = 'all .3s'; setTimeout(() => t.remove(), 300); }, 2800);
+}
+
+// ==================== Modal ====================
+function openModal(html, size='') {
+  document.getElementById('modalContainer').innerHTML = `<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()"><div class="modal ${size}">${html}</div></div>`;
+}
+function closeModal() { document.getElementById('modalContainer').innerHTML = ''; editingId = null; }
+
+// ==================== Utils ====================
+function fmtMoney(n) {
+  if (n == null || isNaN(n)) return '¥0.00';
+  return '¥' + Number(n).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+function fmtDate(d) {
+  if (!d) return '-';
+  const dt = new Date(d);
+  return dt.getFullYear() + '-' + String(dt.getMonth()+1).padStart(2,'0') + '-' + String(dt.getDate()).padStart(2,'0');
+}
+function fmtDateTime(d) {
+  if (!d) return '-';
+  const dt = new Date(d);
+  return fmtDate(d) + ' ' + String(dt.getHours()).padStart(2,'0') + ':' + String(dt.getMinutes()).padStart(2,'0');
+}
+function getStatusBadge(status) {
+  const map = { pending: ['badge-pending','待核查'], verified: ['badge-verified','已核查'], discrepancy: ['badge-discrepancy','有差异'] };
+  const [cls, label] = map[status] || ['badge-pending','未知'];
+  return `<span class="badge ${cls}">${label}</span>`;
+}
+function getSupplierName(id) {
+  const s = DB.getSuppliers().find(x => x.id === id);
+  return s ? s.name : '未知供应商';
+}
+
+// ==================== Dashboard ====================
+function renderDashboard() {
+  const records = DB.getRecords();
+  const suppliers = DB.getSuppliers();
+  const users = DB.getUsers();
+  const pending = records.filter(r => r.status === 'pending');
+  const verified = records.filter(r => r.status === 'verified');
+  const discrepancy = records.filter(r => r.status === 'discrepancy');
+  const totalAmount = records.reduce((s,r) => s + (r.totalAmount||0), 0);
+  const diffAmount = discrepancy.reduce((s,r) => s + Math.abs(r.difference||0), 0);
+
+  // Monthly data
+  const months = [];
+  const now = new Date();
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    months.push({ label: (d.getMonth()+1) + '月', year: d.getFullYear(), month: d.getMonth() });
+  }
+  const monthlyData = months.map(m => {
+    return records.filter(r => {
+      const d = new Date(r.date);
+      return d.getFullYear() === m.year && d.getMonth() === m.month;
+    }).reduce((s,r) => s + (r.totalAmount||0), 0);
+  });
+
+  // Supplier distribution
+  const supDist = suppliers.map(s => ({
+    name: s.name.length > 8 ? s.name.slice(0,8)+'…' : s.name,
+    amount: records.filter(r => r.supplierId === s.id).reduce((sum,r) => sum + (r.totalAmount||0), 0)
+  })).filter(x => x.amount > 0).sort((a,b) => b.amount - a.amount);
+
+  const html = `
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-info">
+          <div class="stat-label">采购总金额</div>
+          <div class="stat-value">${fmtMoney(totalAmount)}</div>
+          <div class="stat-sub" style="color:var(--gray-400)">${records.length} 条记录</div>
+        </div>
+        <div class="stat-icon teal">💰</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-info">
+          <div class="stat-label">待核查</div>
+          <div class="stat-value">${pending.length}</div>
+          <div class="stat-sub" style="color:var(--warning)">待处理</div>
+        </div>
+        <div class="stat-icon amber">⏳</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-info">
+          <div class="stat-label">已核查</div>
+          <div class="stat-value">${verified.length}</div>
+          <div class="stat-sub" style="color:var(--success)">金额一致</div>
+        </div>
+        <div class="stat-icon green">✓</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-info">
+          <div class="stat-label">金额差异</div>
+          <div class="stat-value">${fmtMoney(diffAmount)}</div>
+          <div class="stat-sub" style="color:var(--danger)">${discrepancy.length} 条有差异</div>
+        </div>
+        <div class="stat-icon red">⚠️</div>
+      </div>
+    </div>
+
+    <div class="dashboard-row">
+      <div class="card">
+        <div class="card-header"><h3>近6个月采购趋势</h3></div>
+        <div class="card-body">
+          <div class="chart-container"><canvas id="trendChart"></canvas></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h3>供应商金额分布</h3></div>
+        <div class="card-body">
+          <div class="chart-container"><canvas id="supChart"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h3>最近采购记录</h3>
+        <button class="btn btn-ghost btn-sm" onclick="navigate('records')">查看全部 →</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>日期</th><th>销售商</th><th>购买人</th><th>品名</th><th>金额</th><th>状态</th>
+          </tr></thead>
+          <tbody>
+            ${records.sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,8).map(r => `
+              <tr>
+                <td>${fmtDate(r.date)}</td>
+                <td>${getSupplierName(r.supplierId)}</td>
+                <td><strong>${r.purchaser||'-'}</strong></td>
+                <td>${r.itemName}</td>
+                <td><strong>${fmtMoney(r.totalAmount)}</strong></td>
+                <td>${getStatusBadge(r.status)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+  document.getElementById('mainContent').innerHTML = html;
+
+  // Charts
+  setTimeout(() => {
+    const ctx1 = document.getElementById('trendChart');
+    if (ctx1) new Chart(ctx1, {
+      type: 'bar',
+      data: { labels: months.map(m=>m.label), datasets: [{ label:'采购金额', data: monthlyData, backgroundColor:'#0d9488', borderRadius:6 }] },
+      options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true,ticks:{callback:v=>'¥'+(v/1000)+'k'}}} }
+    });
+    const ctx2 = document.getElementById('supChart');
+    if (ctx2 && supDist.length > 0) new Chart(ctx2, {
+      type: 'doughnut',
+      data: { labels: supDist.map(x=>x.name), datasets: [{ data: supDist.map(x=>x.amount), backgroundColor:['#0d9488','#3b82f6','#f59e0b','#ef4444','#8b5cf6','#ec4899'] }] },
+      options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom',labels:{font:{size:11}}}} }
+    });
+  }, 100);
+}
+
+// ==================== Procurement Records ====================
+function renderRecords() {
+  const records = DB.getRecords().sort((a,b) => new Date(b.date) - new Date(a.date));
+  const suppliers = DB.getSuppliers();
+  const f = pageFilters.records || {};
+  let filtered = records;
+  if (f.keyword) filtered = filtered.filter(r => r.itemName.includes(f.keyword) || r.receiptNo.includes(f.keyword));
+  if (f.purchaser) filtered = filtered.filter(r => r.purchaser && r.purchaser.includes(f.purchaser));
+  if (f.supplier) filtered = filtered.filter(r => r.supplierId === f.supplier);
+  if (f.status) filtered = filtered.filter(r => r.status === f.status);
+  if (f.category) filtered = filtered.filter(r => r.category === f.category);
+  if (f.dateFrom) filtered = filtered.filter(r => r.date >= f.dateFrom);
+  if (f.dateTo) filtered = filtered.filter(r => r.date <= f.dateTo);
+
+  const totalAmount = filtered.reduce((s,r) => s + (r.totalAmount||0), 0);
+  const canAdd = ['admin','recorder'].includes(currentUser.role);
+
+  const html = `
+    <div class="filters">
+      <div class="filter-item"><input class="form-input" placeholder="搜索品名/发票号" value="${f.keyword||''}" oninput="updateFilter('records','keyword',this.value);debounceRender()" id="filterKeyword"></div>
+      <div class="filter-item">
+        <select class="form-select" onchange="updateFilter('records','supplier',this.value);renderRecords()">
+          <option value="">全部供应商</option>
+          ${suppliers.map(s => `<option value="${s.id}" ${f.supplier===s.id?'selected':''}>${s.name}</option>`).join('')}
+        </select>
+      </div>
+      <div class="filter-item"><input class="form-input" placeholder="购买人" value="${f.purchaser||''}" oninput="updateFilter('records','purchaser',this.value);debounceRender()"></div>
+      <div class="filter-item">
+        <select class="form-select" onchange="updateFilter('records','category',this.value);renderRecords()">
+          <option value="">全部分类</option>
+          <option value="试剂" ${f.category==='试剂'?'selected':''}>试剂</option>
+          <option value="耗材" ${f.category==='耗材'?'selected':''}>耗材</option>
+          <option value="设备" ${f.category==='设备'?'selected':''}>设备</option>
+          <option value="其他" ${f.category==='其他'?'selected':''}>其他</option>
+        </select>
+      </div>
+      <div class="filter-item">
+        <select class="form-select" onchange="updateFilter('records','status',this.value);renderRecords()">
+          <option value="">全部状态</option>
+          <option value="pending" ${f.status==='pending'?'selected':''}>待核查</option>
+          <option value="verified" ${f.status==='verified'?'selected':''}>已核查</option>
+          <option value="discrepancy" ${f.status==='discrepancy'?'selected':''}>有差异</option>
+        </select>
+      </div>
+      <div class="filter-item"><input type="date" class="form-input" value="${f.dateFrom||''}" onchange="updateFilter('records','dateFrom',this.value);renderRecords()" title="开始日期"></div>
+      <div class="filter-item"><input type="date" class="form-input" value="${f.dateTo||''}" onchange="updateFilter('records','dateTo',this.value);renderRecords()" title="结束日期"></div>
+      ${canAdd ? `<button class="btn btn-primary" onclick="openRecordForm()">+ 新增记录</button>` : ''}
+      <button class="btn btn-secondary btn-sm" onclick="exportRecordsCSV()">导出CSV</button>
+    </div>
+    <div class="summary-row">
+      <div class="summary-item"><span class="summary-label">筛选记录</span><span class="summary-val">${filtered.length}</span></div>
+      <div class="summary-item"><span class="summary-label">合计金额</span><span class="summary-val">${fmtMoney(totalAmount)}</span></div>
+    </div>
+    ${filtered.length === 0 ? `
+      <div class="card"><div class="empty-state">
+        <div class="empty-icon">📭</div><h4>暂无采购记录</h4><p>点击"新增记录"开始录入</p>
+      </div></div>
+    ` : `
+      <div class="card"><div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>日期</th><th>销售商</th><th>购买人</th><th>分类</th><th>品名</th><th>规格</th><th>数量</th><th>单价</th><th>金额</th><th>发票号</th><th>录入人</th><th>状态</th><th>操作</th>
+          </tr></thead>
+          <tbody>
+            ${filtered.map(r => {
+              const canEdit = ['admin','recorder'].includes(currentUser.role) && r.status === 'pending';
+              return `<tr>
+                <td>${fmtDate(r.date)}</td>
+                <td>${getSupplierName(r.supplierId)}</td>
+                <td><strong>${r.purchaser||'-'}</strong></td>
+                <td>${r.category||'-'}</td>
+                <td>${r.itemName}</td>
+                <td>${r.specification||'-'}</td>
+                <td>${r.quantity} ${r.unit||''}</td>
+                <td>${fmtMoney(r.unitPrice)}</td>
+                <td><strong>${fmtMoney(r.totalAmount)}</strong></td>
+                <td>${r.receiptNo||'-'}</td>
+                <td>${r.recorder||'-'}</td>
+                <td>${getStatusBadge(r.status)}</td>
+                <td>
+                  <button class="btn btn-ghost btn-sm" onclick="viewRecord('${r.id}')">查看</button>
+                  ${canEdit ? `<button class="btn btn-ghost btn-sm" onclick="openRecordForm('${r.id}')">编辑</button>` : ''}
+                </td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div></div>
+    `}
+  `;
+  document.getElementById('mainContent').innerHTML = html;
+}
+
+function openRecordForm(id) {
+  editingId = id || null;
+  const r = id ? DB.getRecords().find(x => x.id === id) : null;
+  const suppliers = DB.getSuppliers();
+  const today = new Date().toISOString().slice(0,10);
+
+  const html = `
+    <div class="modal-header">
+      <h3>${r ? '编辑采购记录' : '新增采购记录'}</h3>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">采购日期 <span class="req">*</span></label>
+          <input type="date" class="form-input" id="rf_date" value="${r ? r.date : today}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">销售商 <span class="req">*</span></label>
+          <input type="text" class="form-input" id="rf_supplier" value="${r ? getSupplierName(r.supplierId) : ''}" placeholder="输入或选择销售商名称" list="supplierList" autocomplete="off">
+          <datalist id="supplierList">
+            ${suppliers.map(s => `<option value="${s.name}"></option>`).join('')}
+          </datalist>
+          <div class="form-hint">可直接输入新销售商名称，系统会自动保存</div>
+        </div>
+      </div>
+      <div class="form-row-3">
+        <div class="form-group">
+          <label class="form-label">购买人 <span class="req">*</span></label>
+          <input type="text" class="form-input" id="rf_purchaser" value="${r ? r.purchaser||'' : ''}" placeholder="组内实际购买人" list="purchaserList">
+          <datalist id="purchaserList">
+            <option value="王明"><option value="李芳"><option value="张伟"><option value="赵琳"><option value="陈强">
+          </datalist>
+        </div>
+        <div class="form-group">
+          <label class="form-label">分类 <span class="req">*</span></label>
+          <select class="form-select" id="rf_category">
+            <option value="试剂" ${!r || r.category==='试剂' ? 'selected':''}>试剂</option>
+            <option value="耗材" ${r && r.category==='耗材' ? 'selected':''}>耗材</option>
+            <option value="设备" ${r && r.category==='设备' ? 'selected':''}>设备</option>
+            <option value="其他" ${r && r.category==='其他' ? 'selected':''}>其他</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">发票号</label>
+          <input type="text" class="form-input" id="rf_receipt" value="${r ? r.receiptNo||'' : ''}" placeholder="发票编号">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">品名 <span class="req">*</span></label>
+          <input type="text" class="form-input" id="rf_itemName" value="${r ? r.itemName : ''}" placeholder="如：PCR试剂盒">
+        </div>
+        <div class="form-group">
+          <label class="form-label">规格</label>
+          <input type="text" class="form-input" id="rf_spec" value="${r ? r.specification||'' : ''}" placeholder="如：100T">
+        </div>
+      </div>
+      <div class="form-row-3">
+        <div class="form-group">
+          <label class="form-label">数量 <span class="req">*</span></label>
+          <input type="number" class="form-input" id="rf_qty" value="${r ? r.quantity : ''}" min="1" oninput="calcTotal()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">单位</label>
+          <input type="text" class="form-input" id="rf_unit" value="${r ? r.unit||'' : ''}" placeholder="如：盒/瓶/包">
+        </div>
+        <div class="form-group">
+          <label class="form-label">单价(¥) <span class="req">*</span></label>
+          <input type="number" class="form-input" id="rf_price" value="${r ? r.unitPrice : ''}" step="0.01" oninput="calcTotal()">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">总金额(¥)</label>
+        <input type="text" class="form-input" id="rf_total" value="${r ? r.totalAmount : '0.00'}" readonly style="background:var(--gray-50);font-weight:700;font-size:16px;color:var(--primary-dark);">
+        <div class="form-hint">总金额 = 数量 × 单价（自动计算）</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">备注</label>
+        <textarea class="form-textarea" id="rf_notes" placeholder="如有特殊情况请说明">${r ? r.notes||'' : ''}</textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">取消</button>
+      <button class="btn btn-primary" onclick="saveRecord()">保存</button>
+    </div>
+  `;
+  openModal(html);
+}
+
+function calcTotal() {
+  const qty = parseFloat(document.getElementById('rf_qty').value) || 0;
+  const price = parseFloat(document.getElementById('rf_price').value) || 0;
+  document.getElementById('rf_total').value = (qty * price).toFixed(2);
+}
+
+async function saveRecord() {
+  const date = document.getElementById('rf_date').value;
+  const supplierName = document.getElementById('rf_supplier').value.trim();
+  const category = document.getElementById('rf_category').value;
+  const receiptNo = document.getElementById('rf_receipt').value.trim();
+  const purchaser = document.getElementById('rf_purchaser').value.trim();
+  const itemName = document.getElementById('rf_itemName').value.trim();
+  const spec = document.getElementById('rf_spec').value.trim();
+  const qty = parseFloat(document.getElementById('rf_qty').value) || 0;
+  const unit = document.getElementById('rf_unit').value.trim();
+  const price = parseFloat(document.getElementById('rf_price').value) || 0;
+  const total = qty * price;
+  const notes = document.getElementById('rf_notes').value.trim();
+
+  if (!date || !supplierName || !itemName || qty <= 0 || price <= 0 || !purchaser) {
+    return toast('请填写必填项（日期、销售商、购买人、品名、数量、单价）', 'error');
+  }
+
+  showLoading();
+  try {
+    // Find or create supplier by name
+    let supplier = DB.getSuppliers().find(s => s.name === supplierName);
+    if (!supplier) {
+      await DB.saveSupplierData({ name: supplierName });
+      supplier = DB.getSuppliers().find(s => s.name === supplierName);
+    }
+
+    const recordData = {
+      date, supplierId: supplier.id, category, receiptNo, purchaser, itemName,
+      specification: spec, unit, quantity: qty, unitPrice: price,
+      totalAmount: total, notes,
+    };
+
+    if (editingId) {
+      await DB.saveRecordData(recordData, editingId);
+      toast('记录已更新', 'success');
+    } else {
+      recordData.recorder = currentUser.name;
+      recordData.recorderId = currentUser.id;
+      recordData.status = 'pending';
+      recordData.createdAt = new Date().toISOString();
+      await DB.saveRecordData(recordData);
+      toast('记录已添加', 'success');
+    }
+    closeModal();
+    renderRecords();
+    renderNav();
+    renderMobileNav();
+  } catch(e) {
+    toast(e.message || '保存失败', 'error');
+  }
+  hideLoading();
+}
+
+function viewRecord(id) {
+  const r = DB.getRecords().find(x => x.id === id);
+  if (!r) return;
+  const supplier = DB.getSuppliers().find(s => s.id === r.supplierId);
+  const html = `
+    <div class="modal-header">
+      <h3>采购记录详情</h3>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+        ${getStatusBadge(r.status)}
+        <span style="font-size:12px;color:var(--gray-400);">记录编号：${r.id}</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        ${[
+          ['采购日期', fmtDate(r.date)],
+          ['销售商', supplier ? supplier.name : '-'],
+          ['购买人', r.purchaser || '-'],
+          ['分类', r.category || '-'],
+          ['发票号', r.receiptNo || '-'],
+          ['品名', r.itemName],
+          ['规格', r.specification || '-'],
+          ['数量', r.quantity + ' ' + (r.unit||'')],
+          ['单价', fmtMoney(r.unitPrice)],
+          ['总金额', fmtMoney(r.totalAmount)],
+          ['录入人', r.recorder || '-'],
+          ['录入时间', fmtDateTime(r.createdAt)],
+        ].map(([k,v]) => `<div style="padding:10px;background:var(--gray-50);border-radius:6px;">
+          <div style="font-size:11px;color:var(--gray-500);margin-bottom:4px;">${k}</div>
+          <div style="font-weight:600;">${v}</div>
+        </div>`).join('')}
+      </div>
+      ${r.notes ? `<div style="margin-top:16px;padding:12px;background:var(--gray-50);border-radius:6px;">
+        <div style="font-size:11px;color:var(--gray-500);margin-bottom:4px;">备注</div>
+        <div>${r.notes}</div>
+      </div>` : ''}
+      ${r.status !== 'pending' ? `
+        <div class="verify-box" style="margin-top:20px;">
+          <h4 style="font-size:14px;margin-bottom:12px;">核查信息</h4>
+          <div class="verify-compare">
+            <div class="vc-item original">
+              <div class="vc-label">记录金额</div><div class="vc-value">${fmtMoney(r.totalAmount)}</div>
+            </div>
+            <div class="vc-item actual">
+              <div class="vc-label">核查金额</div><div class="vc-value">${fmtMoney(r.verifiedAmount)}</div>
+            </div>
+            <div class="vc-item diff ${r.difference===0?'match':''}">
+              <div class="vc-label">差额</div><div class="vc-value">${fmtMoney(r.difference)}</div>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div style="padding:10px;background:var(--gray-50);border-radius:6px;">
+              <div style="font-size:11px;color:var(--gray-500);">核查人</div>
+              <div style="font-weight:600;">${r.verifiedBy||'-'}</div>
+            </div>
+            <div style="padding:10px;background:var(--gray-50);border-radius:6px;">
+              <div style="font-size:11px;color:var(--gray-500);">核查时间</div>
+              <div style="font-weight:600;">${fmtDateTime(r.verifiedAt)}</div>
+            </div>
+          </div>
+          ${r.verifyNote ? `<div style="margin-top:12px;padding:10px;background:var(--gray-50);border-radius:6px;">
+            <div style="font-size:11px;color:var(--gray-500);">核查备注</div>
+            <div>${r.verifyNote}</div>
+          </div>` : ''}
+        </div>
+      ` : ''}
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">关闭</button>
+    </div>
+  `;
+  openModal(html);
+}
+
+function exportRecordsCSV() {
+  const records = DB.getRecords();
+  let csv = '\uFEFF日期,销售商,购买人,分类,品名,规格,数量,单位,单价,总金额,发票号,录入人,状态,核查人,核查金额,差额\n';
+  records.forEach(r => {
+    const row = [
+      r.date, getSupplierName(r.supplierId), r.purchaser||'', r.category||'', r.itemName, r.specification||'',
+      r.quantity, r.unit||'', r.unitPrice, r.totalAmount, r.receiptNo||'',
+      r.recorder||'', r.status, r.verifiedBy||'', r.verifiedAmount||'', r.difference||'',
+    ].map(v => {
+      const s = String(v);
+      return s.includes(',') || s.includes('"') ? '"' + s.replace(/"/g,'""') + '"' : s;
+    }).join(',');
+    csv += row + '\n';
+  });
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = '采购记录_' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('CSV已导出', 'success');
+}
+
+// ==================== Verification Center ====================
+function renderVerify() {
+  const records = DB.getRecords();
+  const pending = records.filter(r => r.status === 'pending').sort((a,b) => new Date(b.date) - new Date(a.date));
+  const verified = records.filter(r => r.status !== 'pending').sort((a,b) => new Date(b.verifiedAt||0) - new Date(a.verifiedAt||0));
+
+  const html = `
+    <div class="tabs">
+      <div class="tab active" id="tab_pending" onclick="switchVerifyTab('pending')">待核查 <span class="tab-badge">${pending.length}</span></div>
+      <div class="tab" id="tab_done" onclick="switchVerifyTab('done')">已核查 (${verified.length})</div>
+    </div>
+    <div id="verifyPending">
+      ${pending.length === 0 ? `
+        <div class="card"><div class="empty-state">
+          <div class="empty-icon">✅</div><h4>没有待核查记录</h4><p>所有记录已核查完毕</p>
+        </div></div>
+      ` : `
+        <div class="card"><div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>日期</th><th>销售商</th><th>购买人</th><th>品名</th><th>规格</th><th>数量</th><th>单价</th><th>记录金额</th><th>录入人</th><th>操作</th>
+            </tr></thead>
+            <tbody>
+              ${pending.map(r => `<tr>
+                <td>${fmtDate(r.date)}</td>
+                <td>${getSupplierName(r.supplierId)}</td>
+                <td><strong>${r.purchaser||'-'}</strong></td>
+                <td>${r.itemName}</td>
+                <td>${r.specification||'-'}</td>
+                <td>${r.quantity} ${r.unit||''}</td>
+                <td>${fmtMoney(r.unitPrice)}</td>
+                <td><strong>${fmtMoney(r.totalAmount)}</strong></td>
+                <td>${r.recorder||'-'}</td>
+                <td><button class="btn btn-primary btn-sm" onclick="openVerifyForm('${r.id}')">核查</button></td>
+              </tr>`).join('')}
+            </tbody>
+          </table>
+        </div></div>
+      `}
+    </div>
+    <div id="verifyDone" style="display:none;">
+      ${verified.length === 0 ? `
+        <div class="card"><div class="empty-state">
+          <div class="empty-icon">📋</div><h4>暂无核查记录</h4>
+        </div></div>
+      ` : `
+        <div class="card"><div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>日期</th><th>销售商</th><th>品名</th><th>记录金额</th><th>核查金额</th><th>差额</th><th>核查人</th><th>核查时间</th><th>状态</th><th>操作</th>
+            </tr></thead>
+            <tbody>
+              ${verified.map(r => `<tr>
+                <td>${fmtDate(r.date)}</td>
+                <td>${getSupplierName(r.supplierId)}</td>
+                <td>${r.itemName}</td>
+                <td>${fmtMoney(r.totalAmount)}</td>
+                <td>${fmtMoney(r.verifiedAmount)}</td>
+                <td style="color:${r.difference===0?'var(--success)':'var(--danger)'};font-weight:700;">${fmtMoney(r.difference)}</td>
+                <td>${r.verifiedBy||'-'}</td>
+                <td>${fmtDateTime(r.verifiedAt)}</td>
+                <td>${r.status === 'verified' ? '<span class="badge badge-match">一致</span>' : '<span class="badge badge-diff">有差异</span>'}</td>
+                <td><button class="btn btn-ghost btn-sm" onclick="viewRecord('${r.id}')">详情</button></td>
+              </tr>`).join('')}
+            </tbody>
+          </table>
+        </div></div>
+      `}
+    </div>
+  `;
+  document.getElementById('mainContent').innerHTML = html;
+}
+
+function switchVerifyTab(tab) {
+  const showPending = tab === 'pending';
+  document.getElementById('tab_pending').classList.toggle('active', showPending);
+  document.getElementById('tab_done').classList.toggle('active', !showPending);
+  document.getElementById('verifyPending').style.display = showPending ? 'block' : 'none';
+  document.getElementById('verifyDone').style.display = showPending ? 'none' : 'block';
+}
+
+function openVerifyForm(id) {
+  const r = DB.getRecords().find(x => x.id === id);
+  if (!r) return;
+  const html = `
+    <div class="modal-header">
+      <h3>核查采购记录</h3>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="verify-box" style="background:var(--gray-50);">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+          <div><div style="font-size:11px;color:var(--gray-500);">采购日期</div><div style="font-weight:600;">${fmtDate(r.date)}</div></div>
+          <div><div style="font-size:11px;color:var(--gray-500);">销售商</div><div style="font-weight:600;">${getSupplierName(r.supplierId)}</div></div>
+          <div><div style="font-size:11px;color:var(--gray-500);">购买人</div><div style="font-weight:600;">${r.purchaser||'-'}</div></div>
+          <div><div style="font-size:11px;color:var(--gray-500);">品名</div><div style="font-weight:600;">${r.itemName}</div></div>
+          <div><div style="font-size:11px;color:var(--gray-500);">规格</div><div style="font-weight:600;">${r.specification||'-'}</div></div>
+          <div><div style="font-size:11px;color:var(--gray-500);">数量</div><div style="font-weight:600;">${r.quantity} ${r.unit||''}</div></div>
+          <div><div style="font-size:11px;color:var(--gray-500);">单价</div><div style="font-weight:600;">${fmtMoney(r.unitPrice)}</div></div>
+          <div><div style="font-size:11px;color:var(--gray-500);">录入人</div><div style="font-weight:600;">${r.recorder||'-'}</div></div>
+          <div><div style="font-size:11px;color:var(--gray-500);">发票号</div><div style="font-weight:600;">${r.receiptNo||'-'}</div></div>
+        </div>
+      </div>
+
+      <div style="margin:20px 0;">
+        <div style="font-size:13px;font-weight:600;margin-bottom:12px;">金额核对</div>
+        <div class="verify-compare">
+          <div class="vc-item original">
+            <div class="vc-label">记录金额</div>
+            <div class="vc-value" id="vcOriginal">${fmtMoney(r.totalAmount)}</div>
+          </div>
+          <div class="vc-item actual">
+            <div class="vc-label">核查金额（发票/实际）</div>
+            <div class="vc-value" id="vcActual">¥0.00</div>
+          </div>
+          <div class="vc-item diff" id="vcDiffBox">
+            <div class="vc-label">差额</div>
+            <div class="vc-value" id="vcDiff">¥0.00</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">核查金额(¥) <span class="req">*</span></label>
+        <div class="amount-input-wrap">
+          <span class="currency">¥</span>
+          <input type="number" class="form-input" id="vf_amount" value="${r.totalAmount}" step="0.01" oninput="updateVerifyCompare(${r.totalAmount})" placeholder="发票实际金额">
+        </div>
+        <div class="form-hint">请输入发票上的实际金额，系统将自动计算差额</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">核查结果 <span class="req">*</span></label>
+        <div style="display:flex;gap:12px;">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:10px 16px;border:1px solid var(--gray-300);border-radius:6px;flex:1;">
+            <input type="radio" name="vf_result" value="verified" checked onchange="onVerifyResultChange()"> <span>金额一致</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:10px 16px;border:1px solid var(--gray-300);border-radius:6px;flex:1;">
+            <input type="radio" name="vf_result" value="discrepancy" onchange="onVerifyResultChange()"> <span>有差异</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">核查备注</label>
+        <textarea class="form-textarea" id="vf_note" placeholder="如有差异请说明原因、已采取的沟通措施等"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">取消</button>
+      <button class="btn btn-primary" onclick="saveVerify('${id}')">确认核查</button>
+    </div>
+  `;
+  openModal(html);
+  setTimeout(() => updateVerifyCompare(r.totalAmount), 50);
+}
+
+function updateVerifyCompare(original) {
+  const actual = parseFloat(document.getElementById('vf_amount').value) || 0;
+  const diff = actual - original;
+  document.getElementById('vcActual').textContent = fmtMoney(actual);
+  document.getElementById('vcDiff').textContent = fmtMoney(diff);
+  const diffBox = document.getElementById('vcDiffBox');
+  diffBox.classList.toggle('match', diff === 0);
+  // Auto-select result based on diff
+  const radios = document.getElementsByName('vf_result');
+  if (diff === 0) { radios[0].checked = true; } else { radios[1].checked = true; }
+}
+
+function onVerifyResultChange() {}
+
+async function saveVerify(id) {
+  const amount = parseFloat(document.getElementById('vf_amount').value);
+  const note = document.getElementById('vf_note').value.trim();
+  const result = document.querySelector('input[name="vf_result"]:checked').value;
+
+  if (isNaN(amount) || amount < 0) return toast('请输入有效金额', 'error');
+
+  const r = DB.getRecords().find(x => x.id === id);
+  if (!r) return toast('记录不存在', 'error');
+
+  const verifyData = {
+    verifiedAmount: amount,
+    difference: amount - r.totalAmount,
+    status: result === 'verified' && (amount - r.totalAmount) === 0 ? 'verified' : 'discrepancy',
+    verifiedBy: currentUser.name,
+    verifierId: currentUser.id,
+    verifiedAt: new Date().toISOString(),
+    verifyNote: note,
+  };
+
+  showLoading();
+  try {
+    await DB.verifyRecordData(id, verifyData);
+    closeModal();
+    renderVerify();
+    renderNav();
+    renderMobileNav();
+    toast('核查完成', 'success');
+  } catch(e) {
+    toast(e.message || '核查失败', 'error');
+  }
+  hideLoading();
+}
+
+// ==================== Suppliers ====================
+function renderSuppliers() {
+  const suppliers = DB.getSuppliers();
+  const records = DB.getRecords();
+  const canEdit = ['admin','recorder'].includes(currentUser.role);
+
+  const html = `
+    <div class="filters">
+      ${canEdit ? `<button class="btn btn-primary" onclick="openSupplierForm()">+ 新增销售商</button>` : ''}
+      <input class="form-input filter-item" placeholder="搜索供应商名称" oninput="filterSuppliers(this.value)" id="supSearch">
+    </div>
+    <div class="card"><div class="table-wrap">
+      ${suppliers.length === 0 ? `<div class="empty-state"><div class="empty-icon">🏢</div><h4>暂无供应商</h4></div>` : `
+      <table>
+        <thead><tr>
+          <th>名称</th><th>联系人</th><th>电话</th><th>地址</th><th>银行账号</th><th>采购记录数</th><th>总金额</th><th>备注</th>${canEdit?'<th>操作</th>':''}
+        </tr></thead>
+        <tbody id="supTableBody">
+          ${suppliers.map(s => {
+            const recs = records.filter(r => r.supplierId === s.id);
+            const total = recs.reduce((sum,r) => sum + (r.totalAmount||0), 0);
+            return `<tr class="sup-row" data-name="${s.name}">
+              <td><strong>${s.name}</strong></td>
+              <td>${s.contact||'-'}</td>
+              <td>${s.phone||'-'}</td>
+              <td>${s.address||'-'}</td>
+              <td style="font-size:12px;">${s.bankAccount||'-'}</td>
+              <td>${recs.length}</td>
+              <td><strong>${fmtMoney(total)}</strong></td>
+              <td style="font-size:12px;color:var(--gray-500);">${s.notes||'-'}</td>
+              ${canEdit ? `<td>
+                <button class="btn btn-ghost btn-sm" onclick="openSupplierForm('${s.id}')">编辑</button>
+                <button class="btn btn-ghost btn-sm" style="color:var(--danger)" onclick="deleteSupplier('${s.id}','${s.name}')">删除</button>
+              </td>` : ''}
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>`}
+    </div></div>
+  `;
+  document.getElementById('mainContent').innerHTML = html;
+}
+
+function filterSuppliers(keyword) {
+  document.querySelectorAll('.sup-row').forEach(row => {
+    row.style.display = row.dataset.name.includes(keyword) ? '' : 'none';
+  });
+}
+
+function openSupplierForm(id) {
+  editingId = id || null;
+  const s = id ? DB.getSuppliers().find(x => x.id === id) : null;
+  const html = `
+    <div class="modal-header">
+      <h3>${s ? '编辑销售商' : '新增销售商'}</h3>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">名称 <span class="req">*</span></label>
+        <input type="text" class="form-input" id="sf_name" value="${s ? s.name : ''}" placeholder="供应商/公司名称">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">联系人</label>
+          <input type="text" class="form-input" id="sf_contact" value="${s ? s.contact||'' : ''}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">联系电话</label>
+          <input type="text" class="form-input" id="sf_phone" value="${s ? s.phone||'' : ''}">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">地址</label>
+        <input type="text" class="form-input" id="sf_address" value="${s ? s.address||'' : ''}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">银行账号</label>
+        <input type="text" class="form-input" id="sf_bank" value="${s ? s.bankAccount||'' : ''}" placeholder="银行账号">
+      </div>
+      <div class="form-group">
+        <label class="form-label">备注</label>
+        <textarea class="form-textarea" id="sf_notes">${s ? s.notes||'' : ''}</textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">取消</button>
+      <button class="btn btn-primary" onclick="saveSupplier()">保存</button>
+    </div>
+  `;
+  openModal(html);
+}
+
+async function saveSupplier() {
+  const name = document.getElementById('sf_name').value.trim();
+  if (!name) return toast('请输入供应商名称', 'error');
+  const data = {
+    name,
+    contact: document.getElementById('sf_contact').value.trim(),
+    phone: document.getElementById('sf_phone').value.trim(),
+    address: document.getElementById('sf_address').value.trim(),
+    bankAccount: document.getElementById('sf_bank').value.trim(),
+    notes: document.getElementById('sf_notes').value.trim(),
+  };
+  showLoading();
+  try {
+    if (editingId) {
+      await DB.saveSupplierData(data, editingId);
+      toast('供应商已更新', 'success');
+    } else {
+      await DB.saveSupplierData(data);
+      toast('供应商已添加', 'success');
+    }
+    closeModal();
+    renderSuppliers();
+  } catch(e) {
+    toast(e.message || '保存失败', 'error');
+  }
+  hideLoading();
+}
+
+async function deleteSupplier(id, name) {
+  const recs = DB.getRecords().filter(r => r.supplierId === id);
+  if (recs.length > 0) return toast(`该供应商有 ${recs.length} 条采购记录，无法删除`, 'error');
+  if (!confirm(`确认删除供应商"${name}"？`)) return;
+  showLoading();
+  try {
+    await DB.deleteSupplierData(id);
+    toast('已删除', 'success');
+    renderSuppliers();
+  } catch(e) {
+    toast(e.message || '删除失败', 'error');
+  }
+  hideLoading();
+}
+
+// ==================== Reports ====================
+function renderReports() {
+  const records = DB.getRecords();
+  const suppliers = DB.getSuppliers();
+
+  // By category
+  const byCategory = ['试剂','耗材','设备','其他'].map(cat => ({
+    cat,
+    count: records.filter(r => r.category === cat).length,
+    amount: records.filter(r => r.category === cat).reduce((s,r) => s + (r.totalAmount||0), 0),
+  }));
+
+  // By supplier
+  const bySupplier = suppliers.map(s => ({
+    name: s.name.length > 10 ? s.name.slice(0,10)+'…' : s.name,
+    count: records.filter(r => r.supplierId === s.id).length,
+    amount: records.filter(r => r.supplierId === s.id).reduce((sum,r) => sum + (r.totalAmount||0), 0),
+  })).filter(x => x.count > 0).sort((a,b) => b.amount - a.amount);
+
+  // By recorder
+  const users = DB.getUsers();
+  const byRecorder = users.map(u => ({
+    name: u.name,
+    count: records.filter(r => r.recorderId === u.id).length,
+    amount: records.filter(r => r.recorderId === u.id).reduce((s,r) => s + (r.totalAmount||0), 0),
+  })).filter(x => x.count > 0);
+
+  // By month
+  const byMonth = {};
+  records.forEach(r => {
+    const m = r.date.slice(0,7);
+    if (!byMonth[m]) byMonth[m] = { count: 0, amount: 0 };
+    byMonth[m].count++;
+    byMonth[m].amount += r.totalAmount || 0;
+  });
+  const monthData = Object.entries(byMonth).sort((a,b) => a[0].localeCompare(b[0]));
+
+  const totalAmount = records.reduce((s,r) => s + (r.totalAmount||0), 0);
+
+  const html = `
+    <div class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr));">
+      <div class="stat-card"><div class="stat-info"><div class="stat-label">总记录数</div><div class="stat-value">${records.length}</div></div><div class="stat-icon teal">📋</div></div>
+      <div class="stat-card"><div class="stat-info"><div class="stat-label">总采购额</div><div class="stat-value">${fmtMoney(totalAmount)}</div></div><div class="stat-icon blue">💰</div></div>
+      <div class="stat-card"><div class="stat-info"><div class="stat-label">供应商数</div><div class="stat-value">${suppliers.length}</div></div><div class="stat-icon green">🏢</div></div>
+      <div class="stat-card"><div class="stat-info"><div class="stat-label">差异金额</div><div class="stat-value">${fmtMoney(records.filter(r=>r.status==='discrepancy').reduce((s,r)=>s+Math.abs(r.difference||0),0))}</div></div><div class="stat-icon red">⚠️</div></div>
+    </div>
+
+    <div class="dashboard-row">
+      <div class="card">
+        <div class="card-header"><h3>按分类统计</h3></div>
+        <div class="card-body"><div class="chart-container"><canvas id="catChart"></canvas></div></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h3>按供应商统计</h3></div>
+        <div class="card-body"><div class="chart-container"><canvas id="supRepChart"></canvas></div></div>
+      </div>
+    </div>
+
+    <div class="dashboard-row">
+      <div class="card">
+        <div class="card-header"><h3>月度趋势</h3></div>
+        <div class="card-body"><div class="chart-container"><canvas id="monthChart"></canvas></div></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h3>按录入人统计</h3></div>
+        <div class="card-body"><div class="chart-container-sm"><canvas id="recChart"></canvas></div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><h3>分类明细</h3></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>分类</th><th>记录数</th><th>金额</th><th>占比</th></tr></thead>
+          <tbody>
+            ${byCategory.map(c => `<tr>
+              <td>${c.cat}</td><td>${c.count}</td><td>${fmtMoney(c.amount)}</td>
+              <td>${totalAmount>0 ? (c.amount/totalAmount*100).toFixed(1)+'%' : '0%'}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+  document.getElementById('mainContent').innerHTML = html;
+
+  setTimeout(() => {
+    const c1 = document.getElementById('catChart');
+    if (c1) new Chart(c1, { type:'bar', data:{ labels: byCategory.map(x=>x.cat), datasets:[{label:'金额',data:byCategory.map(x=>x.amount),backgroundColor:['#0d9488','#3b82f6','#f59e0b','#8b5cf6'],borderRadius:6}] }, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{callback:v=>'¥'+(v/1000)+'k'}}}} });
+    const c2 = document.getElementById('supRepChart');
+    if (c2 && bySupplier.length) new Chart(c2, { type:'pie', data:{ labels:bySupplier.map(x=>x.name), datasets:[{data:bySupplier.map(x=>x.amount),backgroundColor:['#0d9488','#3b82f6','#f59e0b','#ef4444','#8b5cf6','#ec4899']} ] }, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:11}}}} } });
+    const c3 = document.getElementById('monthChart');
+    if (c3 && monthData.length) new Chart(c3, { type:'line', data:{ labels:monthData.map(x=>x[0]), datasets:[{label:'采购额',data:monthData.map(x=>x[1].amount),borderColor:'#0d9488',backgroundColor:'rgba(13,148,136,0.1)',fill:true,tension:.3}] }, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{callback:v=>'¥'+(v/1000)+'k'}}}} });
+    const c4 = document.getElementById('recChart');
+    if (c4 && byRecorder.length) new Chart(c4, { type:'bar', data:{ labels:byRecorder.map(x=>x.name), datasets:[{label:'录入额',data:byRecorder.map(x=>x.amount),backgroundColor:'#3b82f6',borderRadius:6}] }, options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,ticks:{callback:v=>'¥'+(v/1000)+'k'}}}} });
+  }, 100);
+}
+
+// ==================== User Management ====================
+function renderUsers() {
+  if (currentUser.role !== 'admin') return navigate('dashboard');
+  const users = DB.getUsers();
+  const records = DB.getRecords();
+  const html = `
+    <div class="filters"><button class="btn btn-primary" onclick="openUserForm()">+ 新增用户</button></div>
+    <div class="card"><div class="table-wrap">
+      <table>
+        <thead><tr><th>姓名</th><th>用户名</th><th>角色</th><th>录入记录数</th><th>核查记录数</th><th>操作</th></tr></thead>
+        <tbody>
+          ${users.map(u => {
+            const recCount = records.filter(r => r.recorderId === u.id).length;
+            const verCount = records.filter(r => r.verifierId === u.id).length;
+            const roleMap = { admin:'管理员', recorder:'录入员', verifier:'核查员' };
+            return `<tr>
+              <td><strong>${u.name}</strong></td>
+              <td>${u.username}</td>
+              <td><span class="role-tag ${u.role}">${roleMap[u.role]}</span></td>
+              <td>${recCount}</td>
+              <td>${verCount}</td>
+              <td>
+                <button class="btn btn-ghost btn-sm" onclick="openUserForm('${u.id}')">编辑</button>
+                ${u.id !== currentUser.id ? `<button class="btn btn-ghost btn-sm" style="color:var(--danger)" onclick="deleteUser('${u.id}','${u.name}')">删除</button>` : ''}
+              </td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div></div>
+  `;
+  document.getElementById('mainContent').innerHTML = html;
+}
+
+function openUserForm(id) {
+  editingId = id || null;
+  const u = id ? DB.getUsers().find(x => x.id === id) : null;
+  const html = `
+    <div class="modal-header"><h3>${u ? '编辑用户' : '新增用户'}</h3><button class="modal-close" onclick="closeModal()">×</button></div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">姓名 <span class="req">*</span></label>
+        <input type="text" class="form-input" id="uf_name" value="${u ? u.name : ''}" placeholder="真实姓名">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">用户名 <span class="req">*</span></label>
+          <input type="text" class="form-input" id="uf_username" value="${u ? u.username : ''}" ${u ? 'readonly' : ''} placeholder="登录用户名">
+        </div>
+        <div class="form-group">
+          <label class="form-label">密码 <span class="req">*</span></label>
+          <input type="text" class="form-input" id="uf_password" value="${u ? u.password : ''}" placeholder="登录密码">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">角色 <span class="req">*</span></label>
+        <select class="form-select" id="uf_role">
+          <option value="admin" ${u && u.role==='admin' ? 'selected':''}>管理员（全部权限）</option>
+          <option value="recorder" ${u && u.role==='recorder' ? 'selected':''}>录入员（采购记录管理）</option>
+          <option value="verifier" ${u && u.role==='verifier' ? 'selected':''}>核查员（核查管理）</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="saveUser()">保存</button></div>
+  `;
+  openModal(html);
+}
+
+async function saveUser() {
+  const name = document.getElementById('uf_name').value.trim();
+  const username = document.getElementById('uf_username').value.trim();
+  const password = document.getElementById('uf_password').value.trim();
+  const role = document.getElementById('uf_role').value;
+  if (!name || !username || !password) return toast('请填写完整信息', 'error');
+  if (!editingId && DB.getUsers().find(u => u.username === username)) return toast('用户名已存在', 'error');
+  const userData = { name, username, password, role };
+  showLoading();
+  try {
+    if (editingId) {
+      await DB.saveUserData(userData, editingId);
+      toast('用户已更新', 'success');
+    } else {
+      await DB.saveUserData(userData);
+      toast('用户已添加', 'success');
+    }
+    closeModal();
+    renderUsers();
+  } catch(e) {
+    toast(e.message || '保存失败', 'error');
+  }
+  hideLoading();
+}
+
+async function deleteUser(id, name) {
+  if (!confirm(`确认删除用户"${name}"？`)) return;
+  showLoading();
+  try {
+    await DB.deleteUserData(id);
+    toast('已删除', 'success');
+    renderUsers();
+  } catch(e) {
+    toast(e.message || '删除失败', 'error');
+  }
+  hideLoading();
+}
+
+// ==================== Settings ====================
+function renderSettings() {
+  if (currentUser.role !== 'admin') return navigate('dashboard');
+  const records = DB.getRecords();
+  const suppliers = DB.getSuppliers();
+  const users = DB.getUsers();
+  const totalSize = new Blob([JSON.stringify({users: users, suppliers: suppliers, records: records})]).size / 1024;
+
+  const html = `
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-info"><div class="stat-label">采购记录</div><div class="stat-value">${records.length}</div></div><div class="stat-icon teal">📋</div></div>
+      <div class="stat-card"><div class="stat-info"><div class="stat-label">供应商</div><div class="stat-value">${suppliers.length}</div></div><div class="stat-icon blue">🏢</div></div>
+      <div class="stat-card"><div class="stat-info"><div class="stat-label">用户</div><div class="stat-value">${users.length}</div></div><div class="stat-icon green">👥</div></div>
+      <div class="stat-card"><div class="stat-info"><div class="stat-label">数据大小</div><div class="stat-value">${totalSize.toFixed(1)} KB</div></div><div class="stat-icon amber">💾</div></div>
+    </div>
+
+    <div class="card" style="margin-bottom:20px;">
+      <div class="card-header"><h3>数据导出</h3></div>
+      <div class="card-body">
+        <p style="color:var(--gray-500);font-size:13px;margin-bottom:16px;">将所有数据导出为 JSON 文件，可用于备份或在其他设备上导入。</p>
+        <button class="btn btn-primary" onclick="exportAllData()">导出全部数据 (JSON)</button>
+        <button class="btn btn-secondary" onclick="exportRecordsCSV()">导出采购记录 (CSV)</button>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:20px;">
+      <div class="card-header"><h3>数据导入</h3></div>
+      <div class="card-body">
+        <p style="color:var(--gray-500);font-size:13px;margin-bottom:16px;">从 JSON 文件导入数据。注意：导入会覆盖当前所有数据。</p>
+        <input type="file" id="importFile" accept=".json" style="display:none;" onchange="importData(event)">
+        <button class="btn btn-primary" onclick="document.getElementById('importFile').click()">选择文件导入</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><h3 style="color:var(--danger)">危险操作</h3></div>
+      <div class="card-body">
+        <p style="color:var(--gray-500);font-size:13px;margin-bottom:16px;">以下操作不可恢复，请谨慎执行。</p>
+        <button class="btn btn-danger" onclick="clearAllData()">清空全部数据</button>
+      </div>
+    </div>
+  `;
+  document.getElementById('mainContent').innerHTML = html;
+}
+
+async function exportAllData() {
+  showLoading();
+  try {
+    const data = await DB.exportAll();
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'lab_finance_backup_' + new Date().toISOString().slice(0,10) + '.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    toast('数据已导出', 'success');
+  } catch(e) {
+    toast('导出失败', 'error');
+  }
+  hideLoading();
+}
+
+async function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.records || !data.suppliers) throw new Error('格式错误');
+      if (!confirm('导入将覆盖当前所有数据，确认继续？')) return;
+      showLoading();
+      await DB.importAll(data);
+      toast('数据导入成功', 'success');
+      renderSettings();
+    } catch (err) {
+      toast('文件格式错误，导入失败', 'error');
+    }
+    hideLoading();
+  };
+  reader.readAsText(file);
+}
+
+async function clearAllData() {
+  if (!confirm('确认清空全部数据？此操作不可恢复！')) return;
+  if (!confirm('再次确认：所有采购记录、供应商和用户数据都将被删除！')) return;
+  showLoading();
+  try {
+    await DB.clearAll();
+    toast('全部数据已清空', 'success');
+    navigate('dashboard');
+  } catch(e) {
+    toast('清空失败', 'error');
+  }
+  hideLoading();
+}
+
+// ==================== Filter Helper ====================
+let debounceTimer = null;
+function debounceRender() {
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(() => renderRecords(), 300);
+}
+function updateFilter(page, key, val) {
+  if (!pageFilters[page]) pageFilters[page] = {};
+  pageFilters[page][key] = val || undefined;
+}
+
+// ==================== Init ====================
+(async function() {
+  showLoading();
+  await DB.init();
+  if (DB._server) {
+    try {
+      const res = await fetch('/api/me');
+      if (res.ok) {
+        currentUser = await res.json();
+        sessionStorage.setItem('lfc_user', JSON.stringify(currentUser));
+        showApp();
+        hideLoading();
+        return;
+      }
+    } catch(e) {}
+  } else {
+    const savedUser = sessionStorage.getItem('lfc_user');
+    if (savedUser) {
+      currentUser = JSON.parse(savedUser);
+      showApp();
+      hideLoading();
+      return;
+    }
+  }
+  document.getElementById('loginPage').style.display = 'flex';
+  hideLoading();
+})();
+</script>
+
+
+</body></html>
