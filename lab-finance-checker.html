@@ -1738,18 +1738,21 @@ function renderVerify() {
         <div class="card"><div class="table-wrap">
           <table>
             <thead><tr>
-              <th>日期</th><th>销售商</th><th>品名</th><th>记录金额</th><th>核查金额</th><th>差额</th><th>核查人</th><th>核查时间</th><th>状态</th><th>操作</th>
+              <th>日期</th><th>销售商</th><th>购买人</th><th>品名</th><th>规格</th><th>数量</th><th>单价</th><th>记录金额</th><th>核查金额</th><th>差额</th><th>核查人</th><th>状态</th><th>操作</th>
             </tr></thead>
             <tbody>
               ${verified.map(r => `<tr>
                 <td>${fmtDate(r.date)}</td>
                 <td>${getSupplierName(r.supplierId)}</td>
+                <td><strong>${r.purchaser||'-'}</strong></td>
                 <td>${r.itemName}</td>
+                <td>${r.specification||'-'}</td>
+                <td>${r.quantity} ${r.unit||''}</td>
+                <td>${fmtMoney(r.unitPrice)}</td>
                 <td>${fmtMoney(r.totalAmount)}</td>
                 <td>${fmtMoney(r.verifiedAmount)}</td>
                 <td style="color:${r.difference===0?'var(--success)':'var(--danger)'};font-weight:700;">${fmtMoney(r.difference)}</td>
                 <td>${r.verifiedBy||'-'}</td>
-                <td>${fmtDateTime(r.verifiedAt)}</td>
                 <td>${r.status === 'verified' ? '<span class="badge badge-match">一致</span>' : '<span class="badge badge-diff">有差异</span>'}</td>
                 <td><button class="btn btn-ghost btn-sm" onclick="viewRecord('${r.id}')">详情</button></td>
               </tr>`).join('')}
