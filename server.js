@@ -250,18 +250,23 @@ async function addRecord(rec) {
 
 async function updateRecord(id, rec) {
   if (pool) {
+    // First fetch existing record to preserve fields not being updated
+    const existing = await pool.query('SELECT * FROM lfc_records WHERE id=$1', [id]);
+    if (existing.rows.length === 0) return null;
+    const old = mapRecordRow(existing.rows[0]);
+    const merged = { ...old, ...rec, id };
     await pool.query(`UPDATE lfc_records SET
       date=$1, supplierId=$2, category=$3, receiptNo=$4, purchaser=$5, itemName=$6,
       specification=$7, unit=$8, quantity=$9, unitPrice=$10, totalAmount=$11, notes=$12,
       verifiedBy=$13, verifierId=$14, verifiedAmount=$15, difference=$16, verifiedAt=$17,
       verifyNote=$18, status=$19
       WHERE id=$20`,
-      [rec.date, rec.supplierId, rec.category, rec.receiptNo || '', rec.purchaser || '',
-       rec.itemName, rec.specification || '', rec.unit || '',
-       rec.quantity, rec.unitPrice, rec.totalAmount, rec.notes || '',
-       rec.verifiedBy || null, rec.verifierId || null, rec.verifiedAmount || null,
-       rec.difference || null, rec.verifiedAt || null, rec.verifyNote || null,
-       rec.status || 'pending', id]);
+      [merged.date, merged.supplierId, merged.category, merged.receiptNo || '', merged.purchaser || '',
+       merged.itemName, merged.specification || '', merged.unit || '',
+       merged.quantity, merged.unitPrice, merged.totalAmount, merged.notes || '',
+       merged.verifiedBy || null, merged.verifierId || null, merged.verifiedAmount || null,
+       merged.difference || null, merged.verifiedAt || null, merged.verifyNote || null,
+       merged.status || 'pending', id]);
     const r = await pool.query('SELECT * FROM lfc_records WHERE id=$1', [id]);
     return mapRecordRow(r.rows[0]);
   }
