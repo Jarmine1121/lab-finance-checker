@@ -858,17 +858,13 @@ const DB = {
 
   async init() {
     try {
-      const res = await fetch('/api/init');
+      const res = await fetch('/api/health');
       if (res.ok) {
-        const data = await res.json();
-        this._users = data.users || [];
-        this._suppliers = data.suppliers || [];
-        this._records = data.records || [];
         this._server = true;
         return;
       }
     } catch(e) {}
-    // Fallback to localStorage
+    this._server = false;
     if (!localStorage.getItem('lfc_users')) {
       this._users = [
         { id: 'u1', name: '系统管理员', username: 'admin', password: 'admin123', role: 'admin' },
@@ -895,6 +891,19 @@ const DB = {
     } else {
       this._records = JSON.parse(localStorage.getItem('lfc_records') || '[]');
     }
+  },
+
+  async loadFromServer() {
+    if (!this._server) return;
+    try {
+      const res = await fetch('/api/init');
+      if (res.ok) {
+        const data = await res.json();
+        this._users = data.users || [];
+        this._suppliers = data.suppliers || [];
+        this._records = data.records || [];
+      }
+    } catch(e) {}
   },
 
   getUsers() { return this._users; },
@@ -1068,6 +1077,7 @@ async function doLogin() {
         return toast(err.error || '登录失败', 'error');
       }
       currentUser = await res.json();
+      await DB.loadFromServer();
     } else {
       const user = DB.getUsers().find(x => x.username === u && x.password === p);
       if (!user) { hideLoading(); return toast('用户名或密码错误', 'error'); }
@@ -2343,6 +2353,7 @@ function updateFilter(page, key, val) {
       if (res.ok) {
         currentUser = await res.json();
         sessionStorage.setItem('lfc_user', JSON.stringify(currentUser));
+        await DB.loadFromServer();
         showApp();
         hideLoading();
         return;
