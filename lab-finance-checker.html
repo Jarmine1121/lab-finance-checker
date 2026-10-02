@@ -958,6 +958,12 @@ const DB = {
     }
   },
 
+  async deleteRecordData(id) {
+    if (this._server) await this._api('DELETE', `/api/records/${id}`);
+    this._records = this._records.filter(r => r.id !== id);
+    if (!this._server) localStorage.setItem('lfc_records', JSON.stringify(this._records));
+  },
+
   async saveSupplierData(data, id) {
     if (this._server) {
       if (id) {
@@ -1430,6 +1436,7 @@ function renderRecords() {
                 <td>
                   <button class="btn btn-ghost btn-sm" onclick="viewRecord('${r.id}')">查看</button>
                   ${canEdit ? `<button class="btn btn-ghost btn-sm" onclick="openRecordForm('${r.id}')">编辑</button>` : ''}
+                  ${currentUser.role === 'admin' ? `<button class="btn btn-ghost btn-sm" style="color:var(--danger)" onclick="deleteRecord('${r.id}')">删除</button>` : ''}
                 </td>
               </tr>`;
             }).join('')}
@@ -1660,10 +1667,30 @@ function viewRecord(id) {
       ` : ''}
     </div>
     <div class="modal-footer">
+      ${currentUser.role === 'admin' ? `<button class="btn btn-danger" onclick="deleteRecord('${r.id}')">删除记录</button>` : ''}
       <button class="btn btn-secondary" onclick="closeModal()">关闭</button>
     </div>
   `;
   openModal(html);
+}
+
+async function deleteRecord(id) {
+  if (!confirm('确定要删除这条记录吗？此操作不可恢复！')) return;
+  showLoading();
+  try {
+    await DB.deleteRecordData(id);
+    closeModal();
+    toast('记录已删除', 'success');
+    // 重新渲染当前页面
+    if (currentPage === 'records') renderRecords();
+    else if (currentPage === 'verify') renderVerify();
+    else if (currentPage === 'dashboard') renderDashboard();
+    renderNav();
+    renderMobileNav();
+  } catch(e) {
+    toast(e.message || '删除失败', 'error');
+  }
+  hideLoading();
 }
 
 function exportRecordsCSV() {
@@ -1754,7 +1781,10 @@ function renderVerify() {
                 <td style="color:${r.difference===0?'var(--success)':'var(--danger)'};font-weight:700;">${fmtMoney(r.difference)}</td>
                 <td>${r.verifiedBy||'-'}</td>
                 <td>${r.status === 'verified' ? '<span class="badge badge-match">一致</span>' : '<span class="badge badge-diff">有差异</span>'}</td>
-                <td><button class="btn btn-ghost btn-sm" onclick="viewRecord('${r.id}')">详情</button></td>
+                <td>
+                  <button class="btn btn-ghost btn-sm" onclick="viewRecord('${r.id}')">详情</button>
+                  ${currentUser.role === 'admin' ? `<button class="btn btn-ghost btn-sm" style="color:var(--danger)" onclick="deleteRecord('${r.id}')">删除</button>` : ''}
+                </td>
               </tr>`).join('')}
             </tbody>
           </table>
